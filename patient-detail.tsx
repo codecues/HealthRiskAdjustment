@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 import { ArrowLeft, Calendar, User, AlertTriangle, TrendingUp, FileText, Stethoscope } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,10 +9,25 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import CodeEducationModal from "./components/code-education-modal"
+import AuditNotes from "./components/audit-notes"
+import ComplianceFooter from "./components/compliance-footer"
+import HedisMeasures from "./components/hedis-measures"
 
 // Mock detailed patient data
 const getPatientDetails = (patient) => ({
   ...patient,
+  hedis: patient.hedis || {
+    overallScore: 75,
+    measures: {
+      "CDC-HbA1c": { status: "Met", lastDate: "2024-11-15", dueDate: "2025-02-15", value: "7.2%" },
+      "CDC-Eye": { status: "Gap", lastDate: "2023-08-20", dueDate: "2024-08-20", value: null },
+      "CDC-Nephropathy": { status: "Met", lastDate: "2024-10-10", dueDate: "2025-10-10", value: "Normal" },
+      CBP: { status: "Gap", lastDate: "2024-12-15", dueDate: "2024-12-15", value: "145/92" },
+      "COL-LDL": { status: "Met", lastDate: "2024-09-05", dueDate: "2025-09-05", value: "95 mg/dL" },
+    },
+    gapCount: 2,
+  },
   demographics: {
     dateOfBirth: "1957-03-15",
     address: "123 Main St, Springfield, IL 62701",
@@ -90,6 +107,14 @@ const getPatientDetails = (patient) => ({
 export default function PatientDetail({ patient, onBack }) {
   const patientDetails = getPatientDetails(patient)
 
+  const [selectedCode, setSelectedCode] = useState(null)
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false)
+
+  const handleCodeClick = (code) => {
+    setSelectedCode(code)
+    setIsCodeModalOpen(true)
+  }
+
   const getRiskBadgeColor = (status) => {
     switch (status) {
       case "Very High Risk":
@@ -162,14 +187,29 @@ export default function PatientDetail({ patient, onBack }) {
               <p className="text-xs text-muted-foreground mt-2">Primary Care</p>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">HEDIS Score</CardTitle>
+              <TrendingUp className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{patient.hedis?.overallScore || "N/A"}</div>
+              {patient.hedis?.gapCount > 0 && (
+                <Badge variant="destructive" className="mt-2">
+                  {patient.hedis.gapCount} gaps
+                </Badge>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="diagnosis">Diagnosis History</TabsTrigger>
             <TabsTrigger value="missing">Missing Codes</TabsTrigger>
+            <TabsTrigger value="hedis">HEDIS Measures</TabsTrigger>
             <TabsTrigger value="interventions">Interventions</TabsTrigger>
             <TabsTrigger value="visits">Recent Visits</TabsTrigger>
           </TabsList>
@@ -273,12 +313,23 @@ export default function PatientDetail({ patient, onBack }) {
                       <TableRow key={idx}>
                         <TableCell>{diagnosis.date}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{diagnosis.code}</Badge>
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-blue-50"
+                            onClick={() => handleCodeClick(diagnosis.code)}
+                          >
+                            {diagnosis.code}
+                          </Badge>
                         </TableCell>
                         <TableCell className="font-medium">{diagnosis.description}</TableCell>
                         <TableCell>
                           {diagnosis.hcc !== "None" ? (
-                            <Badge>{diagnosis.hcc}</Badge>
+                            <Badge
+                              className="cursor-pointer hover:bg-blue-50"
+                              onClick={() => handleCodeClick(diagnosis.hcc)}
+                            >
+                              {diagnosis.hcc}
+                            </Badge>
                           ) : (
                             <Badge variant="secondary">No HCC</Badge>
                           )}
@@ -346,6 +397,10 @@ export default function PatientDetail({ patient, onBack }) {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="hedis" className="space-y-6">
+            <HedisMeasures patient={patientDetails} />
           </TabsContent>
 
           <TabsContent value="interventions" className="space-y-6">
@@ -432,8 +487,11 @@ export default function PatientDetail({ patient, onBack }) {
                 ))}
               </CardContent>
             </Card>
+            <AuditNotes patientId={patient.id} />
           </TabsContent>
         </Tabs>
+        <CodeEducationModal code={selectedCode} isOpen={isCodeModalOpen} onClose={() => setIsCodeModalOpen(false)} />
+        <ComplianceFooter />
       </div>
     </div>
   )

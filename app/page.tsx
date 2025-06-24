@@ -8,8 +8,11 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import PatientDetail from "./patient-detail"
+import Analytics from "./analytics"
+import { Button } from "@/components/ui/button"
+import ComplianceFooter from "../components/compliance-footer"
 
-// Mock patient data
+// Mock patient data with HEDIS information
 const patients = [
   {
     id: 1,
@@ -23,6 +26,17 @@ const patients = [
     lastVisit: "2024-12-15",
     missingCodes: 3,
     status: "High Risk",
+    hedis: {
+      overallScore: 78,
+      measures: {
+        "CDC-HbA1c": { status: "Met", lastDate: "2024-11-15", dueDate: "2025-02-15", value: "7.2%" },
+        "CDC-Eye": { status: "Gap", lastDate: "2023-08-20", dueDate: "2024-08-20", value: null },
+        "CDC-Nephropathy": { status: "Met", lastDate: "2024-10-10", dueDate: "2025-10-10", value: "Normal" },
+        CBP: { status: "Gap", lastDate: "2024-12-15", dueDate: "2024-12-15", value: "145/92" },
+        "COL-LDL": { status: "Met", lastDate: "2024-09-05", dueDate: "2025-09-05", value: "95 mg/dL" },
+      },
+      gapCount: 2,
+    },
   },
   {
     id: 2,
@@ -36,6 +50,15 @@ const patients = [
     lastVisit: "2024-12-10",
     missingCodes: 2,
     status: "High Risk",
+    hedis: {
+      overallScore: 85,
+      measures: {
+        "CDC-HbA1c": { status: "Met", lastDate: "2024-10-20", dueDate: "2025-01-20", value: "6.8%" },
+        CBP: { status: "Met", lastDate: "2024-12-10", dueDate: "2025-03-10", value: "132/78" },
+        "COL-LDL": { status: "Met", lastDate: "2024-11-05", dueDate: "2025-11-05", value: "78 mg/dL" },
+      },
+      gapCount: 0,
+    },
   },
   {
     id: 3,
@@ -49,6 +72,14 @@ const patients = [
     lastVisit: "2024-12-08",
     missingCodes: 1,
     status: "Moderate Risk",
+    hedis: {
+      overallScore: 72,
+      measures: {
+        CBP: { status: "Met", lastDate: "2024-12-08", dueDate: "2025-03-08", value: "128/82" },
+        "COL-LDL": { status: "Gap", lastDate: "2023-11-15", dueDate: "2024-11-15", value: null },
+      },
+      gapCount: 1,
+    },
   },
   {
     id: 4,
@@ -62,6 +93,15 @@ const patients = [
     lastVisit: "2024-12-12",
     missingCodes: 4,
     status: "Very High Risk",
+    hedis: {
+      overallScore: 65,
+      measures: {
+        "CDC-HbA1c": { status: "Gap", lastDate: "2024-06-15", dueDate: "2024-12-15", value: null },
+        "CDC-Eye": { status: "Gap", lastDate: "2023-05-20", dueDate: "2024-05-20", value: null },
+        CBP: { status: "Gap", lastDate: "2024-12-12", dueDate: "2024-12-12", value: "165/95" },
+      },
+      gapCount: 3,
+    },
   },
   {
     id: 5,
@@ -75,6 +115,13 @@ const patients = [
     lastVisit: "2024-12-14",
     missingCodes: 2,
     status: "High Risk",
+    hedis: {
+      overallScore: 45,
+      measures: {
+        CBP: { status: "Met", lastDate: "2024-12-14", dueDate: "2025-03-14", value: "125/80" },
+      },
+      gapCount: 0,
+    },
   },
   {
     id: 6,
@@ -88,6 +135,14 @@ const patients = [
     lastVisit: "2024-12-05",
     missingCodes: 0,
     status: "Moderate Risk",
+    hedis: {
+      overallScore: 90,
+      measures: {
+        CBP: { status: "Met", lastDate: "2024-12-05", dueDate: "2025-03-05", value: "118/75" },
+        "COL-LDL": { status: "Met", lastDate: "2024-11-20", dueDate: "2025-11-20", value: "85 mg/dL" },
+      },
+      gapCount: 0,
+    },
   },
   {
     id: 7,
@@ -101,6 +156,15 @@ const patients = [
     lastVisit: "2024-12-11",
     missingCodes: 3,
     status: "High Risk",
+    hedis: {
+      overallScore: 70,
+      measures: {
+        "CDC-HbA1c": { status: "Met", lastDate: "2024-10-15", dueDate: "2025-01-15", value: "7.8%" },
+        "CDC-Eye": { status: "Due Soon", lastDate: "2024-01-20", dueDate: "2025-01-20", value: null },
+        CBP: { status: "Gap", lastDate: "2024-12-11", dueDate: "2024-12-11", value: "155/88" },
+      },
+      gapCount: 2,
+    },
   },
   {
     id: 8,
@@ -114,6 +178,14 @@ const patients = [
     lastVisit: "2024-12-09",
     missingCodes: 2,
     status: "Very High Risk",
+    hedis: {
+      overallScore: 55,
+      measures: {
+        "CDC-HbA1c": { status: "Gap", lastDate: "2024-05-10", dueDate: "2024-11-10", value: null },
+        CBP: { status: "Gap", lastDate: "2024-12-09", dueDate: "2024-12-09", value: "170/92" },
+      },
+      gapCount: 2,
+    },
   },
   {
     id: 9,
@@ -127,6 +199,14 @@ const patients = [
     lastVisit: "2024-12-13",
     missingCodes: 1,
     status: "Moderate Risk",
+    hedis: {
+      overallScore: 82,
+      measures: {
+        CBP: { status: "Met", lastDate: "2024-12-13", dueDate: "2025-03-13", value: "128/78" },
+        "COL-LDL": { status: "Met", lastDate: "2024-10-25", dueDate: "2025-10-25", value: "92 mg/dL" },
+      },
+      gapCount: 0,
+    },
   },
   {
     id: 10,
@@ -140,6 +220,21 @@ const patients = [
     lastVisit: "2024-12-07",
     missingCodes: 2,
     status: "High Risk",
+    hedis: {
+      overallScore: 75,
+      measures: {
+        "CDC-HbA1c": { status: "Met", lastDate: "2024-11-07", dueDate: "2025-02-07", value: "7.1%" },
+        "CDC-Nephropathy": {
+          status: "Met",
+          lastDate: "2024-09-15",
+          dueDate: "2025-09-15",
+          value: "Microalbumin positive",
+        },
+        CBP: { status: "Gap", lastDate: "2024-12-07", dueDate: "2024-12-07", value: "148/85" },
+        "COL-LDL": { status: "Met", lastDate: "2024-08-20", dueDate: "2025-08-20", value: "88 mg/dL" },
+      },
+      gapCount: 1,
+    },
   },
 ]
 
@@ -148,6 +243,7 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("name")
   const [filterBy, setFilterBy] = useState("all")
+  const [showAnalytics, setShowAnalytics] = useState(false)
 
   const filteredAndSortedPatients = patients
     .filter((patient) => {
@@ -178,6 +274,10 @@ export default function HomePage() {
     }
   }
 
+  if (showAnalytics) {
+    return <Analytics onBack={() => setShowAnalytics(false)} patients={patients} />
+  }
+
   if (selectedPatient) {
     return <PatientDetail patient={selectedPatient} onBack={() => setSelectedPatient(null)} />
   }
@@ -186,13 +286,21 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Healthcare Risk Adjustment Viewer</h1>
-          <p className="text-gray-600">Monitor patient risk profiles and identify missing risk codes</p>
+        <div className="mb-8 flex justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Healthcare Risk Adjustment Viewer</h1>
+            <p className="text-gray-600">Monitor patient risk profiles and identify missing risk codes</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button onClick={() => setShowAnalytics(true)} variant="outline">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Analytics Dashboard
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
@@ -233,6 +341,18 @@ export default function HomePage() {
               <div className="text-2xl font-bold text-orange-600">
                 {patients.reduce((sum, p) => sum + p.missingCodes, 0)}
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">HEDIS Gaps</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">
+                {patients.reduce((sum, p) => sum + (p.hedis?.gapCount || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Quality measure gaps</p>
             </CardContent>
           </Card>
         </div>
@@ -300,6 +420,7 @@ export default function HomePage() {
                   <TableHead>Status</TableHead>
                   <TableHead>Active Conditions</TableHead>
                   <TableHead>Missing Codes</TableHead>
+                  <TableHead>HEDIS Score</TableHead>
                   <TableHead>Last Visit</TableHead>
                 </TableRow>
               </TableHeader>
@@ -342,6 +463,16 @@ export default function HomePage() {
                         <Badge variant="secondary">0</Badge>
                       )}
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-blue-600">{patient?.hedis?.overallScore || "N/A"}</span>
+                        {patient?.hedis?.gapCount > 0 && (
+                          <Badge variant="destructive" className="text-xs">
+                            {patient?.hedis.gapCount} gaps
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{patient.lastVisit}</TableCell>
                   </TableRow>
                 ))}
@@ -349,6 +480,7 @@ export default function HomePage() {
             </Table>
           </CardContent>
         </Card>
+        <ComplianceFooter />
       </div>
     </div>
   )
